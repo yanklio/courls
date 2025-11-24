@@ -1,6 +1,6 @@
 package main
 
-import "github/Yarlaw07/Courls/cmd"
+import "github.com/yanklio/courls/cmd"
 
 func main() {
 	cmd.Execute()
