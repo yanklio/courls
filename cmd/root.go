@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	scrapper "github/Yarlaw07/Courls/pkg"
 	"log"
 	"os"
 	"strings"
+
+	scrapper "github.com/yanklio/courls/pkg"
 
 	"github.com/spf13/cobra"
 )
@@ -18,7 +19,6 @@ var rootCmd = &cobra.Command{
 
 		url := getUrl(args)
 
-		// file
 		filePath, _ := cmd.Flags().GetString("filepath")
 		file := getFile(filePath)
 
@@ -27,12 +27,10 @@ var rootCmd = &cobra.Command{
 		limit, _ := cmd.Flags().GetInt("limit")
 
 		c := scrapper.GetScrapper(url, file, limit)
-
 		c.Visit(url)
 
-		fmt.Fprintln(file,"-----------------------")
-		fmt.Fprintln(file,scrapper.Count)
-	
+		fmt.Fprintln(file, "-----------------------")
+		fmt.Fprintln(file, scrapper.GetCount())
 	},
 }
 
