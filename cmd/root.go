@@ -13,29 +13,21 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "courls",
-	Short: "Counter of urls in web domain",
-	Long:  "Scraper counter of all urls in this web domain",
+	Short: "Scrape and count URLs from a web domain",
+	Long:  "A web scraper that visits a domain and counts all unique URLs found, with configurable visit limits and file output",
 	Run: func(cmd *cobra.Command, args []string) {
-
 		url := getUrl(args)
+		limit, _ := cmd.Flags().GetInt("limit");
+		fileName, _ := cmd.Flags().GetString("filepath");
 
-		filePath, _ := cmd.Flags().GetString("filepath")
-		file := getFile(filePath)
+		props := scrapper.NewScrapperProps(url, limit, fileName)
 
-		defer file.Close()
-
-		limit, _ := cmd.Flags().GetInt("limit")
-
-		c := scrapper.GetScrapper(url, file, limit)
+		c := scrapper.Scrap(props)
 		c.Visit(url)
-
-		fmt.Fprintln(file, "-----------------------")
-		fmt.Fprintln(file, scrapper.GetCount())
 	},
 }
 
 func getUrl(args []string) string {
-
 	if len(args) != 1 {
 		log.Fatalln("courls must accept only one parameter that a link to site")
 	}
@@ -43,31 +35,10 @@ func getUrl(args []string) string {
 	url := args[0]
 
 	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
-		log.Fatalln("courls must have before link a http or https")
+		log.Fatalln("courls must have before link a http:// or https://")
 	}
 
 	return url
-}
-
-func getFile(filePath string) *os.File {
-
-	if filePath == "" {
-		file, err := os.Create("res.txt")
-
-		if err != nil {
-			log.Fatalln("Can't create file in current folder")
-		}
-
-		return file
-	}
-
-	file, err := os.Create(filePath)
-
-	if err != nil {
-		log.Fatalln("Can't create file in given directory")
-	}
-
-	return file
 }
 
 func Execute() {
@@ -78,6 +49,6 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().StringP("filepath", "f", "", "specify filepath to resFile")
-	rootCmd.Flags().IntP("limit", "l", 1000000, "specify limit of links")
+	rootCmd.Flags().StringP("filepath", "f", "", "specify filepath to result file")
+	rootCmd.Flags().IntP("limit", "l", 1000, "specify limit of links to be visited")
 }
