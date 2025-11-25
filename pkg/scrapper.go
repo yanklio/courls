@@ -1,47 +1,43 @@
 package scrapper
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/gocolly/colly/v2"
 )
 
 
-func Scrap(props *scrapperProps) *scrapperResult {
+func Scrap(props *scrapperProps) <-chan *CompletedUrl{
+
 	count := 0
-	c := colly.NewCollector()
+	results := make(chan *CompletedUrl)
 
-	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
-		if count >= props.Limit {
-			return
-		}
+	go func() {
+		defer close(results)
 
-		href := (e.Attr("href"))
+		c := colly.NewCollector()
+		c.OnHTML("a[href]", func(e *colly.HTMLElement) {
+			if count >= props.Limit {
+				return
+			}
 
-		if strings.HasPrefix(href, props.Url) {
-			e.Request.Visit(clearUrl(href))
-		}
-	})
+			href := (e.Attr("href"))
 
-	c.OnResponse(func(r *colly.Response) {
-		fmt.Printf("%d\t%d\t%s\n", count, r.StatusCode, r.Request.URL.String())
+			if strings.HasPrefix(href, props.Url) {
+				e.Request.Visit(clearUrl(href))
+			}
+		})
 
-		if (props.isFile){
-			fmt.Fprintf(props.File, "%d\t%d\t%s\n", count, r.StatusCode, r.Request.URL.String())
-		}
+		c.OnResponse(func(r *colly.Response) {
+			results <- NewCompletedUrl(count, r.StatusCode, r.Request.URL.String())
 
-		count++
-	})
+			count++
+		})
 
-	fmt.Println("Count   Code    URL")
-	fmt.Println("------  -----   ------------------------")
+		c.Visit(props.Url)
+	}()
 
-	c.Visit(props.Url)
-
-	res := NewScrapperResult(count)
-
-	return res
+	return results
 }
 
 func clearUrl(url string) string {

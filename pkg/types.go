@@ -29,6 +29,20 @@ func NewScrapperProps(url string, limit int, fileName string) *scrapperProps {
 	}
 }
 
+type CompletedUrl struct {
+	Id int
+	StatusCode int
+	Url string
+}
+
+func NewCompletedUrl(id int, statusCode int, url string) *CompletedUrl {
+	return &CompletedUrl{
+		Id:         id,
+		StatusCode: statusCode,
+		Url:        url,
+	}
+}
+
 type scrapperResult struct {
 	count int
 }

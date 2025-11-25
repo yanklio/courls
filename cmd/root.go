@@ -21,7 +21,9 @@ var rootCmd = &cobra.Command{
 		fileName, _ := cmd.Flags().GetString("filepath");
 
 		props := scrapper.NewScrapperProps(url, limit, fileName)
-		scrapper.Scrap(props)
+		resultCh := scrapper.Scrap(props)
+
+		output(resultCh)
 	},
 }
 
@@ -49,4 +51,13 @@ func Execute() {
 func init() {
 	rootCmd.Flags().StringP("filepath", "f", "", "specify filepath to result file")
 	rootCmd.Flags().IntP("limit", "l", 1000, "specify limit of links to be visited")
+}
+
+func output(results <-chan *scrapper.CompletedUrl) {
+	fmt.Println("Count   Code    URL")
+	fmt.Println("------  -----   ------------------------")
+
+	for result := range results {
+		fmt.Printf("%5d   %3d     %s\n", result.Id, result.StatusCode, result.Url)
+	}
 }
