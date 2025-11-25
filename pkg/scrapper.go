@@ -7,9 +7,9 @@ import (
 	"github.com/gocolly/colly/v2"
 )
 
-var count = 0
 
-func Scrap(props *scrapperProps) *colly.Collector {
+func Scrap(props *scrapperProps) *scrapperResult {
+	count := 0
 	c := colly.NewCollector()
 
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
@@ -24,24 +24,27 @@ func Scrap(props *scrapperProps) *colly.Collector {
 		}
 	})
 
-	c.OnRequest(func(r *colly.Request) {
-		fmt.Println(r.URL.String())
+	c.OnResponse(func(r *colly.Response) {
+		fmt.Printf("%d\t%d\t%s\n", count, r.StatusCode, r.Request.URL.String())
 
 		if (props.isFile){
-			fmt.Fprintln(props.File, r.URL.String())
+			fmt.Fprintf(props.File, "%d\t%d\t%s\n", count, r.StatusCode, r.Request.URL.String())
 		}
 
 		count++
 	})
 
-	return c
+	fmt.Println("Count   Code    URL")
+	fmt.Println("------  -----   ------------------------")
+
+	c.Visit(props.Url)
+
+	res := NewScrapperResult(count)
+
+	return res
 }
 
 func clearUrl(url string) string {
 	lastIndex := strings.LastIndex(url, "/")
 	return url[:lastIndex+1]
-}
-
-func GetCount() int {
-	return count
 }

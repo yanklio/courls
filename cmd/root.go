@@ -21,9 +21,7 @@ var rootCmd = &cobra.Command{
 		fileName, _ := cmd.Flags().GetString("filepath");
 
 		props := scrapper.NewScrapperProps(url, limit, fileName)
-
-		c := scrapper.Scrap(props)
-		c.Visit(url)
+		scrapper.Scrap(props)
 	},
 }
 

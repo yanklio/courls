@@ -28,3 +28,13 @@ func NewScrapperProps(url string, limit int, fileName string) *scrapperProps {
 		isFile: fileName != "",
 	}
 }
+
+type scrapperResult struct {
+	count int
+}
+
+func NewScrapperResult(count int) *scrapperResult {
+	return &scrapperResult{
+		count: count,
+	}
+}
