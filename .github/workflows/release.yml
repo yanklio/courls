@@ -17,8 +17,14 @@ jobs:
         with:
           go-version: "1.24"
 
-      - name: Build
+      - name: Build for unix
         run: go build -o courls .
+
+      - name: Build for windows
+        env:
+          GOOS: windows
+          GOARCH: amd64
+        run: go build -o courls.exe .
 
       - name: Debug File Structure
         run: ls -R
@@ -28,5 +34,5 @@ jobs:
         with:
           files: |
             courls
-            install/unix.sh
+            courls.exe
           token: ${{ secrets.PAT_TOKEN }}
