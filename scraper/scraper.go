@@ -2,6 +2,7 @@ package scraper
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 
 	"github.com/gocolly/colly/v2"
@@ -20,7 +21,7 @@ func Scrap(props *scraperProps) <-chan *CompletedUrl {
 		}
 
 		if err := scraper.run(); err != nil {
-			//TODO: Handle error handling
+			log.Printf("scraper error: %v", err)
 			return
 		}
 	}()
