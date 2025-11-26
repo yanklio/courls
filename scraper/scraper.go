@@ -8,6 +8,8 @@ import (
 	"github.com/gocolly/colly/v2"
 )
 
+// Scrap initiates the web scraping process with the given properties.
+// It returns a channel that streams the scraping results.
 func Scrap(props *scraperProps) <-chan *CompletedUrl {
 	results := make(chan *CompletedUrl)
 
@@ -30,6 +32,7 @@ func Scrap(props *scraperProps) <-chan *CompletedUrl {
 }
 
 
+// run configures and starts the scraping process.
 func (s *scraper) run() error {
 	if err := s.setupFileOutput(); err != nil {
 		return fmt.Errorf("failed to setup file output: %w", err)
@@ -52,10 +55,12 @@ func (s *scraper) run() error {
 	return nil
 }
 
+// setupCollector initializes a new colly collector.
 func (s *scraper) setupCollector() *colly.Collector {
 	return colly.NewCollector()
 }
 
+// configureCollectorHandlers sets up the HTML and response handlers for the collector.
 func (s *scraper) configureCollectorHandlers(c *colly.Collector, baseURL *url.URL) {
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		s.handleLink(e, baseURL)
@@ -66,6 +71,7 @@ func (s *scraper) configureCollectorHandlers(c *colly.Collector, baseURL *url.UR
 	})
 }
 
+// handleLink processes found links, resolves them, and visits them if they are within the same domain.
 func (s *scraper) handleLink(e *colly.HTMLElement, baseURL *url.URL) {
 	if s.count >= s.props.Limit {
 		return
@@ -85,6 +91,7 @@ func (s *scraper) handleLink(e *colly.HTMLElement, baseURL *url.URL) {
 	}
 }
 
+// handleResponse processes the response, sends the result to the channel, and writes to the output file.
 func (s *scraper) handleResponse(r *colly.Response) {
 	cleanURL := stripQueryParams(r.Request.URL.String())
 
