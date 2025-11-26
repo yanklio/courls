@@ -1,9 +1,10 @@
 package scrapper
 
 import (
-	// "log"
+	"fmt"
 	"net/url"
-	// "os"
+	"os"
+
 	"strings"
 
 	"github.com/gocolly/colly/v2"
@@ -12,11 +13,21 @@ import (
 func Scrap(props *scrapperProps) <-chan *CompletedUrl {
 	count := 0
 
-	// logger := log.New(os.Stdout, "scrapper: ", log.LstdFlags)
+	var file *os.File = nil
+	var err error = nil
+
 	results := make(chan *CompletedUrl)
 
-	go func() {
+	go func(props *scrapperProps) {
 		defer close(results)
+
+		if props.isFile {
+			file, err = os.Create(props.FileName)
+			if err != nil {
+				panic(err)
+			}
+			defer file.Close()
+		}
 
 		c := colly.NewCollector()
 		baseURL, err := url.Parse(props.Url)
@@ -36,7 +47,6 @@ func Scrap(props *scrapperProps) <-chan *CompletedUrl {
 			}
 
 			absoluteURL := resolveURL(baseURL, href)
-			// logger.Print(0)
 
 			if isSameDomain(baseURL, absoluteURL) {
 				cleanURL := stripQueryParams(absoluteURL)
@@ -47,11 +57,14 @@ func Scrap(props *scrapperProps) <-chan *CompletedUrl {
 		c.OnResponse(func(r *colly.Response) {
 			cleanURL := stripQueryParams(r.Request.URL.String())
 			results <- NewCompletedUrl(count, r.StatusCode, cleanURL)
+			if (props.isFile) {
+				fmt.Fprintf(file, "%5d   %3d     %s\n", count, r.StatusCode, cleanURL)
+			}
 			count++
 		})
 
 		c.Visit(props.Url)
-	}()
+	}(props)
 
 	return results
 }
