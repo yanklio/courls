@@ -3,95 +3,93 @@ package scrapper
 import (
 	"fmt"
 	"net/url"
-	"os"
-
-	"strings"
 
 	"github.com/gocolly/colly/v2"
 )
 
 func Scrap(props *scrapperProps) <-chan *CompletedUrl {
-	count := 0
-
-	var file *os.File = nil
-	var err error = nil
-
 	results := make(chan *CompletedUrl)
 
-	go func(props *scrapperProps) {
+	go func() {
 		defer close(results)
 
-		if props.isFile {
-			file, err = os.Create(props.FileName)
-			if err != nil {
-				panic(err)
-			}
-			defer file.Close()
+		scraper := &scraper{
+			props:   props,
+			results: results,
+			count:   0,
 		}
 
-		c := colly.NewCollector()
-		baseURL, err := url.Parse(props.Url)
-		if err != nil {
+		if err := scraper.run(); err != nil {
+			//TODO: Handle error handling
 			return
 		}
-
-		c.OnHTML("a[href]", func(e *colly.HTMLElement) {
-			if count >= props.Limit {
-				return
-			}
-
-			href := e.Attr("href")
-
-			if href == "" || strings.Contains(href, "#") || strings.Contains(href, ".") {
-				return
-			}
-
-			absoluteURL := resolveURL(baseURL, href)
-
-			if isSameDomain(baseURL, absoluteURL) {
-				cleanURL := stripQueryParams(absoluteURL)
-				e.Request.Visit(cleanURL)
-			}
-		})
-
-		c.OnResponse(func(r *colly.Response) {
-			cleanURL := stripQueryParams(r.Request.URL.String())
-			results <- NewCompletedUrl(count, r.StatusCode, cleanURL)
-			if (props.isFile) {
-				fmt.Fprintf(file, "%5d   %3d     %s\n", count, r.StatusCode, cleanURL)
-			}
-			count++
-		})
-
-		c.Visit(props.Url)
-	}(props)
+	}()
 
 	return results
 }
 
-func resolveURL(base *url.URL, href string) string {
-	u, err := url.Parse(href)
-	if err != nil {
-		return href
+
+func (s *scraper) run() error {
+	if err := s.setupFileOutput(); err != nil {
+		return fmt.Errorf("failed to setup file output: %w", err)
 	}
-	resolved := base.ResolveReference(u)
-	resolved.RawQuery = ""
-	return resolved.String()
+	defer s.closeFile()
+
+	collector := s.setupCollector()
+
+	baseURL, err := url.Parse(s.props.Url)
+	if err != nil {
+		return fmt.Errorf("failed to parse base URL: %w", err)
+	}
+
+	s.configureCollectorHandlers(collector, baseURL)
+
+	if err := collector.Visit(s.props.Url); err != nil {
+		return fmt.Errorf("failed to visit initial URL: %w", err)
+	}
+
+	return nil
 }
 
-func stripQueryParams(urlStr string) string {
-	u, err := url.Parse(urlStr)
-	if err != nil {
-		return urlStr
-	}
-	u.RawQuery = ""
-	return u.String()
+func (s *scraper) setupCollector() *colly.Collector {
+	return colly.NewCollector()
 }
 
-func isSameDomain(base *url.URL, hrefStr string) bool {
-	u, err := url.Parse(hrefStr)
-	if err != nil {
-		return false
+func (s *scraper) configureCollectorHandlers(c *colly.Collector, baseURL *url.URL) {
+	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
+		s.handleLink(e, baseURL)
+	})
+
+	c.OnResponse(func(r *colly.Response) {
+		s.handleResponse(r)
+	})
+}
+
+func (s *scraper) handleLink(e *colly.HTMLElement, baseURL *url.URL) {
+	if s.count >= s.props.Limit {
+		return
 	}
-	return u.Host == base.Host
+
+	href := e.Attr("href")
+
+	if !s.isValidLink(href) {
+		return
+	}
+
+	absoluteURL := resolveURL(baseURL, href)
+
+	if isSameDomain(baseURL, absoluteURL) {
+		cleanURL := stripQueryParams(absoluteURL)
+		e.Request.Visit(cleanURL)
+	}
+}
+
+func (s *scraper) handleResponse(r *colly.Response) {
+	cleanURL := stripQueryParams(r.Request.URL.String())
+
+	completedURL := NewCompletedUrl(s.count, r.StatusCode, cleanURL)
+	s.results <- completedURL
+
+	s.writeToFile(s.count, r.StatusCode, cleanURL)
+	s.count++
 }

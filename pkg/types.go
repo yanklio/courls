@@ -1,5 +1,14 @@
 package scrapper
 
+import "os"
+
+type scraper struct {
+	props   *scrapperProps
+	results chan<- *CompletedUrl
+	count   int
+	file    *os.File
+}
+
 type scrapperProps struct {
 	Url string
 	Limit int
@@ -9,7 +18,6 @@ type scrapperProps struct {
 }
 
 func NewScrapperProps(url string, limit int, fileName string) *scrapperProps {
-
 	return &scrapperProps{
 		Url:    url,
 		Limit:  limit,
