@@ -1,4 +1,4 @@
-package scrapper
+package scraper
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"github.com/gocolly/colly/v2"
 )
 
-func Scrap(props *scrapperProps) <-chan *CompletedUrl {
+func Scrap(props *scraperProps) <-chan *CompletedUrl {
 	results := make(chan *CompletedUrl)
 
 	go func() {

@@ -1,15 +1,15 @@
-package scrapper
+package scraper
 
 import "os"
 
 type scraper struct {
-	props   *scrapperProps
+	props   *scraperProps
 	results chan<- *CompletedUrl
 	count   int
 	file    *os.File
 }
 
-type scrapperProps struct {
+type scraperProps struct {
 	Url string
 	Limit int
 
@@ -17,8 +17,8 @@ type scrapperProps struct {
 	FileName string
 }
 
-func NewScrapperProps(url string, limit int, fileName string) *scrapperProps {
-	return &scrapperProps{
+func NewScraperProps(url string, limit int, fileName string) *scraperProps {
+	return &scraperProps{
 		Url:    url,
 		Limit:  limit,
 		FileName:   fileName,
@@ -40,12 +40,12 @@ func NewCompletedUrl(id int, statusCode int, url string) *CompletedUrl {
 	}
 }
 
-type scrapperResult struct {
+type scraperResult struct {
 	count int
 }
 
-func NewScrapperResult(count int) *scrapperResult {
-	return &scrapperResult{
+func NewScraperResult(count int) *scraperResult {
+	return &scraperResult{
 		count: count,
 	}
 }

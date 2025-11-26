@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	scrapper "github.com/yanklio/courls/pkg"
+	scrapper "github.com/yanklio/courls/scraper"
 
 	"github.com/spf13/cobra"
 )
@@ -20,7 +20,7 @@ var rootCmd = &cobra.Command{
 		limit, _ := cmd.Flags().GetInt("limit");
 		fileName, _ := cmd.Flags().GetString("filepath");
 
-		props := scrapper.NewScrapperProps(url, limit, fileName)
+		props := scrapper.NewScraperProps(url, limit, fileName)
 		resultCh := scrapper.Scrap(props)
 
 		output(resultCh)
