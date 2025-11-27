@@ -72,12 +72,9 @@ func TestCloseFile(t *testing.T) {
 		file: file,
 	}
 
+	// Call closeFile() once; should not panic.
 	s.closeFile()
 
-	// On Unix, this will produce an error if the file is closed.
-	// On Windows, this is not a reliable way to check if a file is closed.
-	err = s.file.Close() // try to close it again
-	if err == nil {
-		t.Logf("closing an already closed file did not produce an error (this may happen on some OSes)")
-	}
+	// Call closeFile() again; should not panic or error.
+	s.closeFile()
 }

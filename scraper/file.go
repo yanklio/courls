@@ -21,10 +21,12 @@ func (s *scraper) setupFileOutput() error {
 }
 
 // writeToFile writes the scraped URL information to the output file.
-func (s *scraper) writeToFile(count int, statusCode int, url string) {
+func (s *scraper) writeToFile(count int, statusCode int, url string) error {
 	if s.file != nil {
-		fmt.Fprintf(s.file, "%5d   %3d     %s\n", count, statusCode, url)
+		_, err := fmt.Fprintf(s.file, "%5d   %3d     %s\n", count, statusCode, url)
+		return err
 	}
+	return nil
 }
 
 // closeFile closes the output file if it is open.
