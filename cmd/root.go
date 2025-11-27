@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	scrapper "github.com/yanklio/courls/pkg"
+	scrapper "github.com/yanklio/courls/scraper"
 
 	"github.com/spf13/cobra"
 )
@@ -20,10 +20,10 @@ var rootCmd = &cobra.Command{
 		limit, _ := cmd.Flags().GetInt("limit");
 		fileName, _ := cmd.Flags().GetString("filepath");
 
-		props := scrapper.NewScrapperProps(url, limit, fileName)
+		props := scrapper.NewScraperProps(url, limit, fileName)
+		resultCh := scrapper.Scrap(props)
 
-		c := scrapper.Scrap(props)
-		c.Visit(url)
+		output(resultCh)
 	},
 }
 
@@ -51,4 +51,13 @@ func Execute() {
 func init() {
 	rootCmd.Flags().StringP("filepath", "f", "", "specify filepath to result file")
 	rootCmd.Flags().IntP("limit", "l", 1000, "specify limit of links to be visited")
+}
+
+func output(results <-chan *scrapper.CompletedUrl) {
+	fmt.Println("Count   Code    URL")
+	fmt.Println("------  -----   ------------------------")
+
+	for result := range results {
+		fmt.Printf("%5d   %3d     %s\n", result.Id, result.StatusCode, result.Url)
+	}
 }
