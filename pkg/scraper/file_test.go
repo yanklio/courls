@@ -59,6 +59,27 @@ func TestWriteToFile(t *testing.T) {
 	}
 }
 
+func TestSetupFileOutputError(t *testing.T) {
+	// Use an invalid path to force os.Create to fail
+	invalidPath := "/dev/null/invalid/path/test.txt"
+
+	s := &scraper{
+		props: &scraperProps{
+			isFile:   true,
+			FileName: invalidPath,
+		},
+	}
+
+	err := s.setupFileOutput()
+	if err == nil {
+		t.Fatal("setupFileOutput() should have returned an error for invalid path")
+	}
+
+	if s.file != nil {
+		t.Error("s.file should be nil when file creation fails")
+	}
+}
+
 func TestCloseFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	filePath := filepath.Join(tmpDir, "test.txt")

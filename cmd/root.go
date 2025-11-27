@@ -6,9 +6,8 @@ import (
 	"os"
 	"strings"
 
-	scrapper "github.com/yanklio/courls/scraper"
-
 	"github.com/spf13/cobra"
+	"github.com/yanklio/courls/pkg/scraper"
 )
 
 var rootCmd = &cobra.Command{
@@ -20,8 +19,8 @@ var rootCmd = &cobra.Command{
 		limit, _ := cmd.Flags().GetInt("limit");
 		fileName, _ := cmd.Flags().GetString("filepath");
 
-		props := scrapper.NewScraperProps(url, limit, fileName)
-		resultCh := scrapper.Scrap(props)
+		props := scraper.NewScraperProps(url, limit, fileName)
+		resultCh := scraper.Scrap(props)
 
 		output(resultCh)
 	},
@@ -53,7 +52,7 @@ func init() {
 	rootCmd.Flags().IntP("limit", "l", 1000, "specify limit of links to be visited")
 }
 
-func output(results <-chan *scrapper.CompletedUrl) {
+func output(results <-chan *scraper.CompletedUrl) {
 	fmt.Println("Count   Code    URL")
 	fmt.Println("------  -----   ------------------------")
 
